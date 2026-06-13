@@ -5,7 +5,7 @@ import joblib
 from data import load_results, process_results, load_elo, process_elo
 from features import matches_per_team, add_form_features, add_elo_features, add_results
 from train import prepare_data, train_model
-from simulate import predict_match
+from simulate import predict_match, simulate_knockout_match, simulate_group
 
 def main():
     df_elo = load_elo()
@@ -22,7 +22,11 @@ def main():
     else:
         X_train, X_test, y_train, y_test = prepare_data(df)
         model = train_model(X_train, X_test, y_train, y_test)
-    probas = predict_match(model, df_teams, df_elo, 'France', 'Spain', pd.Timestamp('2026-06-14'))
-    print(f"W: {probas[0]:.2%} | D: {probas[1]:.2%} | L: {probas[2]:.2%}")
+    qualifies = simulate_group(
+        model, df_teams, df_elo,
+        teams=['Brasil', 'Morocco', 'Scotland', 'Haiti'],
+        dates=[pd.Timestamp('2026-06-15')] * 6
+    )
+    print(f"Qualified : {qualifies}")
 if __name__ == "__main__":
     main()
