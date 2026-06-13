@@ -1,6 +1,11 @@
+from pathlib import Path
+import pandas as pd
+import joblib
+
 from data import load_results, process_results, load_elo, process_elo
 from features import matches_per_team, add_form_features, add_elo_features, add_results
 from train import prepare_data, train_model
+from simulate import predict_match
 
 def main():
     df_elo = load_elo()
@@ -11,8 +16,13 @@ def main():
     df = add_form_features(df, df_teams, n=5)
     df = add_elo_features(df, df_elo)
     df = add_results(df)
-    X_train, X_test, y_train, y_test = prepare_data(df)
-    model = train_model(X_train, X_test, y_train, y_test)
-
+    model_path = Path('..') / 'models' / 'xgboost.pkl'
+    if model_path.exists():
+        model = joblib.load(model_path)
+    else:
+        X_train, X_test, y_train, y_test = prepare_data(df)
+        model = train_model(X_train, X_test, y_train, y_test)
+    probas = predict_match(model, df_teams, df_elo, 'France', 'Spain', pd.Timestamp('2026-06-14'))
+    print(f"W: {probas[0]:.2%} | D: {probas[1]:.2%} | L: {probas[2]:.2%}")
 if __name__ == "__main__":
     main()
