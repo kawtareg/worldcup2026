@@ -5,6 +5,21 @@ import numpy as np
 from features import get_elo, get_team_form
 from itertools import combinations
 
+GROUPS = {
+    'A': ['Mexico', 'South Africa', 'South Korea', 'Czech Republic'],
+    'B': ['Qatar', 'Switzerland', 'Canada', 'Bosnia and Herzegovina'],
+    'C': ['Brazil', 'Morocco', 'Haiti', 'Scotland'],
+    'D': ['United States', 'Paraguay', 'Australia', 'Turkey'],
+    'E': ['Germany', 'Curaçao', 'Ivory Coast', 'Ecuador'],
+    'F': ['Netherlands', 'Japan', 'Sweden', 'Tunisia'],
+    'G': ['Belgium', 'Egypt', 'Iran', 'New Zealand'],
+    'H': ['Spain', 'Cape Verde', 'Saudi Arabia', 'Uruguay'],
+    'I': ['France', 'Senegal', 'Iraq', 'Norway'],
+    'J': ['Argentina', 'Algeria', 'Austria', 'Jordan'],
+    'K': ['Portugal', 'DR Congo', 'Uzbekistan', 'Colombia'],
+    'L': ['England', 'Croatia', 'Ghana', 'Panama'],
+}
+
 def predict_match(model, df_teams, df_elo, home_team, away_team, date):
     """Predict match outcome probabilities using the trained model.
 
@@ -52,7 +67,7 @@ def simulate_knockout_match(model, df_teams, df_elo, home_team, away_team, date)
     winner = np.random.choice([home_team, away_team], p=[p_home, p_away])
     return winner
 
-def simulate_group(model, df_teams, df_elo, teams, dates):
+def simulate_group(model, df_teams, df_elo, teams, date):
     """Simulate a group stage and return the two qualified teams.
 
     Args:
@@ -60,7 +75,7 @@ def simulate_group(model, df_teams, df_elo, teams, dates):
         df_teams (pd.DataFrame): Team-level match dataframe.
         df_elo (pd.DataFrame): Processed ELO ratings dataframe.
         teams (list): List of 4 team names in the group.
-        dates (list): List of 6 match dates.
+        date (list): List of 6 match dates.
 
     Returns:
         list: The two qualified teams sorted by points descending.
@@ -68,7 +83,7 @@ def simulate_group(model, df_teams, df_elo, teams, dates):
     matchs = list(combinations(teams, 2))
     points = {team: 0 for team in teams}
     for i, match in enumerate(matchs):
-        probas = predict_match(model, df_teams, df_elo, match[0], match[1], dates[i])
+        probas = predict_match(model, df_teams, df_elo, match[0], match[1], date)
         result = np.random.choice(['W', 'D', 'L'], p=probas[0])
         if result == 'W':
             points[match[0]] += 3
@@ -77,4 +92,29 @@ def simulate_group(model, df_teams, df_elo, teams, dates):
         else:
             points[match[0]] += 1
             points[match[1]] += 1
-    return sorted(points, key=lambda x: points[x], reverse=True)[:2]
+    qualifies = sorted(points, key=lambda x: points[x], reverse=True)
+    return qualifies[0], qualifies[1], qualifies[2], points[qualifies[2]]
+
+def simulate_group_stage(model, df_teams, df_elo):
+    """Simulate all 12 group stages and return qualified teams and best third-place finishers.
+
+    Args:
+        model (XGBClassifier): Trained XGBoost model.
+        df_teams (pd.DataFrame): Team-level match dataframe.
+        df_elo (pd.DataFrame): Processed ELO ratings dataframe.
+
+    Returns:
+        tuple: 
+            - results (dict): Maps group letter to (first, second) qualified teams.
+            - best_thirds (list): 8 best third-place finishers as (group, (team, points)) sorted by points.
+    """
+    results = {}
+    thirds = {}
+    
+    for group, teams in GROUPS.items():
+        first, second, third, points_third = simulate_group(model, df_teams, df_elo, teams, pd.Timestamp('2026-06-11'))
+        results[group] = (first, second)
+        thirds[group] = (third, points_third)
+    
+    best_thirds = sorted(thirds.items(), key=lambda x: x[1][1], reverse=True)[:8]
+    return results, best_thirds
