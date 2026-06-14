@@ -49409,9 +49409,9 @@ date,home_team,away_team,home_score,away_score,tournament,neutral
 2026-06-12,Canada,Bosnia and Herzegovina,1.0,1.0,FIFA World Cup,False
 2026-06-12,United States,Paraguay,4.0,1.0,FIFA World Cup,False
 2026-06-13,Qatar,Switzerland,1.0,1.0,FIFA World Cup,True
-2026-06-13,Brazil,Morocco,,,FIFA World Cup,True
-2026-06-13,Haiti,Scotland,,,FIFA World Cup,True
-2026-06-13,Australia,Turkey,,,FIFA World Cup,True
+2026-06-13,Brazil,Morocco,1.0,1.0,FIFA World Cup,True
+2026-06-13,Haiti,Scotland,0.0,1.0,FIFA World Cup,True
+2026-06-13,Australia,Turkey,2.0,0.0,FIFA World Cup,True
 2026-06-14,Germany,Curaçao,,,FIFA World Cup,True
 2026-06-14,Ivory Coast,Ecuador,,,FIFA World Cup,True
 2026-06-14,Netherlands,Japan,,,FIFA World Cup,True

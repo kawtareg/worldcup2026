@@ -118,3 +118,96 @@ def simulate_group_stage(model, df_teams, df_elo):
     
     best_thirds = sorted(thirds.items(), key=lambda x: x[1][1], reverse=True)[:8]
     return results, best_thirds
+
+def get_predicted_winner(probas, home_team, away_team):
+    """Determine the predicted winner from model output probabilities.
+
+    Args:
+        probas (np.ndarray): Output of predict_match — shape (1, 3) with [P(W), P(D), P(L)].
+        home_team (str): Name of the home team.
+        away_team (str): Name of the away team.
+
+    Returns:
+        str: Predicted winner — home_team, away_team, or 'Draw'.
+    """
+    idx = np.argmax(probas[0])
+    if idx == 0: return home_team
+    elif idx == 1: return 'Draw'
+    else: return away_team
+
+def get_actual_result(row):
+    """Extract the actual match result from a DataFrame row.
+
+    Args:
+        row (pd.Series): A row from the matches DataFrame with home_score and away_score.
+
+    Returns:
+        str or None: Actual result — home_team, away_team, 'Draw', or None if not played yet.
+    """
+    if pd.isna(row['home_score']):
+        return None
+    if row['home_score'] > row['away_score']: return row['home_team']
+    elif row['home_score'] < row['away_score']: return row['away_team']
+    else: return 'Draw'
+
+def compare_results(predicted, actual):
+    """Compare predicted and actual results.
+
+    Args:
+        predicted (str): Predicted result.
+        actual (str or None): Actual result, None if match not played yet.
+
+    Returns:
+        bool or None: True if correct, False if wrong, None if match not played.
+    """
+    if actual is None:
+        return None
+    if actual == predicted: return True
+    else: return False
+
+def build_predictions_df(model, df_raw, df_teams, df_elo):
+    """Build a DataFrame with predictions and actual results for all 2026 World Cup matches.
+
+    Args:
+        model (XGBClassifier): Trained XGBoost model.
+        df_raw (pd.DataFrame): Raw match results including future matches.
+        df_teams (pd.DataFrame): Team-level match dataframe.
+        df_elo (pd.DataFrame): Processed ELO ratings dataframe.
+
+    Returns:
+        pd.DataFrame: Predictions with columns home_team, away_team, date,
+            P(W), P(D), P(L), predicted, actual, correct.
+    """
+    df_raw['date'] = pd.to_datetime(df_raw['date'])
+    wc_matches = df_raw[(df_raw['tournament'] == 'FIFA World Cup') & (df_raw['date'].dt.year == 2026)].copy()
+    rows = []
+    for _, row in wc_matches.iterrows():
+        probas = predict_match(model, df_teams, df_elo, row['home_team'], row['away_team'], row['date'])
+        predicted = get_predicted_winner(probas, row['home_team'], row['away_team'])
+        actual = get_actual_result(row)
+        correct = compare_results(predicted, actual)        
+        rows.append({
+        'home_team': row['home_team'],
+        'away_team': row['away_team'],
+        'date': row['date'],
+        'P(W)': probas[0][0],
+        'P(D)': probas[0][1],
+        'P(L)': probas[0][2],
+        'predicted': predicted,
+        'actual': actual,
+        'correct': correct
+    })
+    return pd.DataFrame(rows)
+
+def evaluate_predictions(predictions_df):
+    """Compute accuracy of predictions on played matches.
+
+    Args:
+        predictions_df (pd.DataFrame): Output of build_predictions_df.
+
+    Returns:
+        float: Proportion of correct predictions on played matches.
+    """
+    played = predictions_df[predictions_df['actual'].notna()]
+    accuracy = played['correct'].mean()
+    return accuracy
