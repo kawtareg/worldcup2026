@@ -20,6 +20,13 @@ GROUPS = {
     'L': ['England', 'Croatia', 'Ghana', 'Panama'],
 }
 
+ROUND_OF_32 = [
+    ('A1', 'B2'), ('C1', 'F2'), ('E1', 'I1'), ('G1', 'D1'),
+    ('H1', 'J2'), ('K1', 'L2'), ('B1', 'A2'), ('D2', 'G2'),
+    ('F1', 'C2'), ('I2', 'E2'), ('J1', 'H2'), ('L1', 'K2'),
+    ('T1', 'T2'), ('T3', 'T4'), ('T5', 'T6'), ('T7', 'T8'),
+]
+
 def predict_match(model, df_teams, df_elo, home_team, away_team, date):
     """Predict match outcome probabilities using the trained model.
 
@@ -62,8 +69,14 @@ def simulate_knockout_match(model, df_teams, df_elo, home_team, away_team, date)
         str: Name of the winning team.
     """
     probas = predict_match(model, df_teams, df_elo, home_team, away_team, date)
-    p_home = probas[0][0] / (probas[0][0] + probas[0][2])
-    p_away = probas[0][2] / (probas[0][0] + probas[0][2])
+    p_home = float(probas[0][0])
+    p_away = float(probas[0][2])
+    total = p_home + p_away
+    p_home = p_home / total
+    p_away = p_away / total
+    p_home = round(p_home, 10)
+    p_away = round(p_away, 10)
+    p_away = 1 - p_home
     winner = np.random.choice([home_team, away_team], p=[p_home, p_away])
     return winner
 
@@ -211,3 +224,84 @@ def evaluate_predictions(predictions_df):
     played = predictions_df[predictions_df['actual'].notna()]
     accuracy = played['correct'].mean()
     return accuracy
+
+def resolve_team(code, results, best_thirds):
+    """Resolve a bracket code to a team name.
+
+    Args:
+        code (str): Bracket code like 'A1', 'B2', or 'T1'.
+        results (dict): Maps group letter to (first, second) qualified teams.
+        best_thirds (list): Sorted list of best third-place finishers as (group, (team, points)).
+
+    Returns:
+        str: Team name corresponding to the bracket code.
+    """
+    if code[1] == '3' or code[0] == 'T':
+        rank = int(code[1]) - 1
+        return best_thirds[rank][1][0]
+    else:
+        group = code[0]
+        rank = int(code[1]) - 1
+        return results[group][rank]
+
+def resolve_bracket(bracket, results, best_thirds):
+    """Resolve all bracket codes to real team names.
+
+    Args:
+        bracket (list): List of (home_code, away_code) tuples.
+        results (dict): Maps group letter to (first, second) qualified teams.
+        best_thirds (list): Sorted list of best third-place finishers.
+
+    Returns:
+        list: List of (home_team, away_team) tuples with real team names.
+    """
+    matches = []
+    for home_code, away_code in bracket:
+        home = resolve_team(home_code, results, best_thirds)
+        away = resolve_team(away_code, results, best_thirds)
+        matches.append((home, away))
+    return matches
+
+def simulate_knockout_stage(model, df_teams, df_elo, matches, date):
+    """Simulate one knockout round and return the winners.
+
+    Args:
+        model (XGBClassifier): Trained XGBoost model.
+        df_teams (pd.DataFrame): Team-level match dataframe.
+        df_elo (pd.DataFrame): Processed ELO ratings dataframe.
+        matches (list): List of (home_team, away_team) tuples.
+        date (pd.Timestamp): Date used for feature calculation.
+
+    Returns:
+        list: List of winning team names.
+    """
+    winners = []
+    for match in matches:
+        winner = simulate_knockout_match(model, df_teams, df_elo, match[0], match[1], date)
+        winners.append(winner)
+    return winners
+
+def simulate_tournament(model, df_teams, df_elo, matches, date):
+    """Simulate the full knockout tournament from round of 32 to the final.
+
+    Args:
+        model (XGBClassifier): Trained XGBoost model.
+        df_teams (pd.DataFrame): Team-level match dataframe.
+        df_elo (pd.DataFrame): Processed ELO ratings dataframe.
+        matches (list): List of (home_team, away_team) tuples for the round of 32.
+        date (pd.Timestamp): Date used for feature calculation.
+
+    Returns:
+        tuple:
+            - history (dict): Maps round name to list of winners.
+            - winner (str): Name of the tournament winner.
+    """
+    rounds = ['R32', 'R16', 'QF', 'SF', 'F']
+    history = {}
+    for round_name in rounds:
+        winners = simulate_knockout_stage(model, df_teams, df_elo, matches, date)
+        history[round_name] = winners
+        if round_name == 'F':
+            break
+        matches = [(winners[i], winners[i+1]) for i in range(0, len(winners), 2)]
+    return history, winners[0]
