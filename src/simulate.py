@@ -119,16 +119,18 @@ def simulate_group_stage(model, df_teams, df_elo):
     Returns:
         tuple: 
             - results (dict): Maps group letter to (first, second) qualified teams.
-            - best_thirds (list): 8 best third-place finishers as (group, (team, points)) sorted by points.
+            - best_thirds (list): 8 best third-place finishers as (group, (team, points))
+            sorted by points.
     """
     results = {}
     thirds = {}
-    
+
     for group, teams in GROUPS.items():
-        first, second, third, points_third = simulate_group(model, df_teams, df_elo, teams, pd.Timestamp('2026-06-11'))
+        first, second, third, points_third = simulate_group(
+            model, df_teams, df_elo, teams, pd.Timestamp('2026-06-11'))
         results[group] = (first, second)
         thirds[group] = (third, points_third)
-    
+
     best_thirds = sorted(thirds.items(), key=lambda x: x[1][1], reverse=True)[:8]
     return results, best_thirds
 
@@ -144,9 +146,12 @@ def get_predicted_winner(probas, home_team, away_team):
         str: Predicted winner — home_team, away_team, or 'Draw'.
     """
     idx = np.argmax(probas[0])
-    if idx == 0: return home_team
-    elif idx == 1: return 'Draw'
-    else: return away_team
+    if idx == 0: 
+        return home_team
+    elif idx == 1: 
+        return 'Draw'
+    else: 
+        return away_team
 
 def get_actual_result(row):
     """Extract the actual match result from a DataFrame row.
@@ -159,9 +164,12 @@ def get_actual_result(row):
     """
     if pd.isna(row['home_score']):
         return None
-    if row['home_score'] > row['away_score']: return row['home_team']
-    elif row['home_score'] < row['away_score']: return row['away_team']
-    else: return 'Draw'
+    if row['home_score'] > row['away_score']: 
+        return row['home_team']
+    if row['home_score'] < row['away_score']: 
+        return row['away_team']
+    else: 
+        return 'Draw'
 
 def compare_results(predicted, actual):
     """Compare predicted and actual results.
@@ -192,13 +200,15 @@ def build_predictions_df(model, df_raw, df_teams, df_elo):
             P(W), P(D), P(L), predicted, actual, correct.
     """
     df_raw['date'] = pd.to_datetime(df_raw['date'])
-    wc_matches = df_raw[(df_raw['tournament'] == 'FIFA World Cup') & (df_raw['date'].dt.year == 2026)].copy()
+    wc_matches = df_raw[(df_raw['tournament'] == 'FIFA World Cup') & 
+        (df_raw['date'].dt.year == 2026)].copy()
     rows = []
     for _, row in wc_matches.iterrows():
-        probas = predict_match(model, df_teams, df_elo, row['home_team'], row['away_team'], row['date'])
+        probas = predict_match(model, df_teams, df_elo, row['home_team'], row['away_team'],
+            row['date'])
         predicted = get_predicted_winner(probas, row['home_team'], row['away_team'])
         actual = get_actual_result(row)
-        correct = compare_results(predicted, actual)        
+        correct = compare_results(predicted, actual)    
         rows.append({
         'home_team': row['home_team'],
         'away_team': row['away_team'],

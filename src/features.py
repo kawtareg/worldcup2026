@@ -12,8 +12,10 @@ def matches_per_team(df):
     Returns:
         pd.DataFrame: One row per team per match, with goals_scored and goals_conceded.
     """
-    df1 = df[['date', 'home_team', 'home_score','away_score','tournament', 'neutral']].rename(columns={'home_team': 'team', 'home_score': 'goals_scored', 'away_score': 'goals_conceded'})
-    df2 = df[['date', 'away_team', 'away_score', 'home_score','tournament', 'neutral']].rename(columns={'away_team': 'team', 'away_score': 'goals_scored', 'home_score': 'goals_conceded'})
+    df1 = df[['date', 'home_team', 'home_score','away_score','tournament', 'neutral']].rename(
+        columns={'home_team': 'team', 'home_score': 'goals_scored', 'away_score': 'goals_conceded'})
+    df2 = df[['date', 'away_team', 'away_score', 'home_score','tournament', 'neutral']].rename(
+        columns={'away_team': 'team', 'away_score': 'goals_scored', 'home_score': 'goals_conceded'})
     return pd.concat([df1, df2]).sort_values('date')
 
 def tournament_weighting(df):
@@ -83,7 +85,7 @@ def add_form_features(df, df_teams, n=5):
         pd.DataFrame: Match dataframe with home_form and away_form columns added.
     """
     df[['home_form', 'home_wins']] = df.apply(
-        lambda row: get_team_form(df_teams, row['home_team'], row['date'], n), 
+        lambda row: get_team_form(df_teams, row['home_team'], row['date'], n),
         axis=1, result_type='expand')
     df[['away_form', 'away_wins']] = df.apply(
         lambda row: get_team_form(df_teams, row['away_team'], row['date'], n),
@@ -102,7 +104,7 @@ def add_elo_features(df, df_elo):
     """
     df['home_elo'] = df.apply(lambda row: get_elo(df_elo, row['home_team'], row['date']), axis=1)
     df['away_elo'] = df.apply(lambda row: get_elo(df_elo, row['away_team'], row['date']), axis=1)
-    df['elo_diff'] = df['home_elo'] - df['away_elo']    
+    df['elo_diff'] = df['home_elo'] - df['away_elo']
     return df
 
 def add_results(df):

@@ -5,7 +5,7 @@ import joblib
 from data import load_results, process_results, load_elo, process_elo
 from features import matches_per_team, add_form_features, add_elo_features, add_results
 from train import prepare_data, train_model
-from simulate import predict_match, simulate_knockout_match, simulate_group
+from simulate import simulate_group_stage, build_predictions_df, simulate_group_stage, resolve_bracket, ROUND_OF_32, simulate_tournament
 
 def main():
     df_elo = load_elo()
@@ -22,11 +22,14 @@ def main():
     else:
         X_train, X_test, y_train, y_test = prepare_data(df)
         model = train_model(X_train, X_test, y_train, y_test)
-    qualifies = simulate_group(
-        model, df_teams, df_elo,
-        teams=['Brasil', 'Morocco', 'Scotland', 'Haiti'],
-        dates=[pd.Timestamp('2026-06-15')] * 6
-    )
-    print(f"Qualified : {qualifies}")
+
+    predictions = build_predictions_df(model, df_raw, df_teams, df_elo)
+    print(predictions.head(10))
+    results, best_thirds = simulate_group_stage(model, df_teams, df_elo)
+    matches = resolve_bracket(ROUND_OF_32, results, best_thirds)
+    date = pd.Timestamp('2026-06-29')
+    history, winner = simulate_tournament(model, df_teams, df_elo, matches, date)
+    print(f"Vainqueur de la CDM 2026 : {winner}")
+
 if __name__ == "__main__":
     main()
