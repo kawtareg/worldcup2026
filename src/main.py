@@ -5,7 +5,8 @@ import joblib
 from data import load_results, process_results, load_elo, process_elo
 from features import matches_per_team, add_form_features, add_elo_features, add_results
 from train import prepare_data, train_model
-from simulate import simulate_group_stage, build_predictions_df, simulate_group_stage, resolve_bracket, ROUND_OF_32, simulate_tournament
+from simulate import simulate_group_stage, build_predictions_df, simulate_group_stage
+from simulate import resolve_bracket, ROUND_OF_32, simulate_tournament
 
 def main():
     df_elo = load_elo()
