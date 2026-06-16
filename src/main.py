@@ -6,7 +6,7 @@ from data import load_results, process_results, load_elo, process_elo
 from features import matches_per_team, add_form_features, add_elo_features, add_results
 from train import prepare_data, train_model
 from simulate import simulate_group_stage, build_predictions_df, simulate_group_stage
-from simulate import resolve_bracket, ROUND_OF_32, simulate_tournament
+from simulate import resolve_bracket, ROUND_OF_32, simulate_tournament, monte_carlo
 
 def main():
     df_elo = load_elo()
@@ -24,13 +24,10 @@ def main():
         X_train, X_test, y_train, y_test = prepare_data(df)
         model = train_model(X_train, X_test, y_train, y_test)
 
-    predictions = build_predictions_df(model, df_raw, df_teams, df_elo)
-    print(predictions.head(10))
-    results, best_thirds = simulate_group_stage(model, df_teams, df_elo)
-    matches = resolve_bracket(ROUND_OF_32, results, best_thirds)
-    date = pd.Timestamp('2026-06-29')
-    history, winner = simulate_tournament(model, df_teams, df_elo, matches, date)
-    print(f"Vainqueur de la CDM 2026 : {winner}")
+    n=1000
+    results_mc = monte_carlo(model, df_teams, df_elo, n=n)
+    for team, wins in results_mc[:10]:
+        print(f"{team}: {wins/n:.1%}")
 
 if __name__ == "__main__":
     main()

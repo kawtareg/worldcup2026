@@ -314,3 +314,24 @@ def simulate_tournament(model, df_teams, df_elo, matches, date):
             break
         matches = [(winners[i], winners[i+1]) for i in range(0, len(winners), 2)]
     return history, winners[0]
+
+def monte_carlo(model, df_teams, df_elo, n=10000):
+    """Run Monte Carlo simulations to estimate each team's probability of winning the World Cup.
+
+    Args:
+        model (XGBClassifier): Trained XGBoost model.
+        df_teams (pd.DataFrame): Team-level match dataframe.
+        df_elo (pd.DataFrame): Processed ELO ratings dataframe.
+        n (int): Number of simulations to run. Defaults to 10000.
+
+    Returns:
+        list: List of (team, wins) tuples sorted by wins descending.
+    """
+    wins = {team: 0 for team in [t for teams in GROUPS.values() for t in teams]}
+    for i in range(n):
+        results, best_thirds = simulate_group_stage(model, df_teams, df_elo)
+        matches = resolve_bracket(ROUND_OF_32, results, best_thirds)
+        date = pd.Timestamp('2026-06-29')
+        _, winner = simulate_tournament(model, df_teams, df_elo, matches, date)
+        wins[winner]+=1
+    return sorted(wins.items(), key=lambda x: x[1], reverse=True)
