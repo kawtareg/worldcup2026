@@ -1,4 +1,5 @@
 """Functions to train and evaluate the XGBoost match outcome prediction model."""
+
 import joblib
 from pathlib import Path
 from xgboost import XGBClassifier
@@ -41,5 +42,6 @@ def train_model(X_train, X_test, y_train, y_test):
     y_pred = model.predict_proba(X_test)
     print('Log loss: ', log_loss(y_test, y_pred))
     path = Path(__file__).parent.parent / "models" / "xgboost.pkl"
+    path.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, path)
     return model
