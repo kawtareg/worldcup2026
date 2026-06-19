@@ -49412,26 +49412,26 @@ date,home_team,away_team,home_score,away_score,tournament,neutral
 2026-06-13,Brazil,Morocco,1.0,1.0,FIFA World Cup,True
 2026-06-13,Haiti,Scotland,0.0,1.0,FIFA World Cup,True
 2026-06-13,Australia,Turkey,2.0,0.0,FIFA World Cup,True
-2026-06-14,Germany,Curaçao,,,FIFA World Cup,True
-2026-06-14,Ivory Coast,Ecuador,,,FIFA World Cup,True
-2026-06-14,Netherlands,Japan,,,FIFA World Cup,True
-2026-06-14,Sweden,Tunisia,,,FIFA World Cup,True
-2026-06-15,Belgium,Egypt,,,FIFA World Cup,True
-2026-06-15,Iran,New Zealand,,,FIFA World Cup,True
-2026-06-15,Spain,Cape Verde,,,FIFA World Cup,True
-2026-06-15,Saudi Arabia,Uruguay,,,FIFA World Cup,True
-2026-06-16,France,Senegal,,,FIFA World Cup,True
-2026-06-16,Iraq,Norway,,,FIFA World Cup,True
-2026-06-16,Argentina,Algeria,,,FIFA World Cup,True
-2026-06-16,Austria,Jordan,,,FIFA World Cup,True
-2026-06-17,Portugal,DR Congo,,,FIFA World Cup,True
-2026-06-17,Uzbekistan,Colombia,,,FIFA World Cup,True
-2026-06-17,England,Croatia,,,FIFA World Cup,True
-2026-06-17,Ghana,Panama,,,FIFA World Cup,True
-2026-06-18,Czech Republic,South Africa,,,FIFA World Cup,True
-2026-06-18,Mexico,South Korea,,,FIFA World Cup,False
-2026-06-18,Switzerland,Bosnia and Herzegovina,,,FIFA World Cup,True
-2026-06-18,Canada,Qatar,,,FIFA World Cup,False
+2026-06-14,Germany,Curaçao,7.0,1.0,FIFA World Cup,True
+2026-06-14,Ivory Coast,Ecuador,1.0,0.0,FIFA World Cup,True
+2026-06-14,Netherlands,Japan,2.0,2.0,FIFA World Cup,True
+2026-06-14,Sweden,Tunisia,5.0,1.0,FIFA World Cup,True
+2026-06-15,Belgium,Egypt,1.0,1.0,FIFA World Cup,True
+2026-06-15,Iran,New Zealand,2.0,2.0,FIFA World Cup,True
+2026-06-15,Spain,Cape Verde,0.0,0.0,FIFA World Cup,True
+2026-06-15,Saudi Arabia,Uruguay,1.0,1.0,FIFA World Cup,True
+2026-06-16,France,Senegal,3.0,1.0,FIFA World Cup,True
+2026-06-16,Iraq,Norway,1.0,4.0,FIFA World Cup,True
+2026-06-16,Argentina,Algeria,3.0,0.0,FIFA World Cup,True
+2026-06-16,Austria,Jordan,3.0,1.0,FIFA World Cup,True
+2026-06-17,Portugal,DR Congo,1.0,1.0,FIFA World Cup,True
+2026-06-17,Uzbekistan,Colombia,1.0,3.0,FIFA World Cup,True
+2026-06-17,England,Croatia,4.0,2.0,FIFA World Cup,True
+2026-06-17,Ghana,Panama,1.0,0.0,FIFA World Cup,True
+2026-06-18,Czech Republic,South Africa,1.0,1.0,FIFA World Cup,True
+2026-06-18,Mexico,South Korea,1.0,0.0,FIFA World Cup,False
+2026-06-18,Switzerland,Bosnia and Herzegovina,4.0,1.0,FIFA World Cup,True
+2026-06-18,Canada,Qatar,6.0,0.0,FIFA World Cup,False
 2026-06-19,Scotland,Morocco,,,FIFA World Cup,True
 2026-06-19,Brazil,Haiti,,,FIFA World Cup,True
 2026-06-19,United States,Australia,,,FIFA World Cup,False

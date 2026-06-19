@@ -283,12 +283,15 @@ def simulate_knockout_stage(model, df_teams, df_elo, matches, date):
 
     Returns:
         list: List of winning team names.
+        results: List of played matches.
     """
     winners = []
+    results = []
     for match in matches:
         winner = simulate_knockout_match(model, df_teams, df_elo, match[0], match[1], date)
         winners.append(winner)
-    return winners
+        results.append({'home': match[0], 'away': match[1], 'winner': winner})
+    return winners, results
 
 def simulate_tournament(model, df_teams, df_elo, matches, date):
     """Simulate the full knockout tournament from round of 32 to the final.
@@ -308,8 +311,8 @@ def simulate_tournament(model, df_teams, df_elo, matches, date):
     rounds = ['R32', 'R16', 'QF', 'SF', 'F']
     history = {}
     for round_name in rounds:
-        winners = simulate_knockout_stage(model, df_teams, df_elo, matches, date)
-        history[round_name] = winners
+        winners, results = simulate_knockout_stage(model, df_teams, df_elo, matches, date)
+        history[round_name] = results
         if round_name == 'F':
             break
         matches = [(winners[i], winners[i+1]) for i in range(0, len(winners), 2)]

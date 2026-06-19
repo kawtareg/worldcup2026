@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who's lifting the cup? — World Cup 2026</title>
+<style>
+  :root {
+    --grass: #0f3d2e;
+    --grass-light: #16573f;
+    --chalk: #f5f3ea;
+    --gold: #e3b341;
+    --gold-bright: #ffd166;
+    --red-card: #e0463f;
+    --ink: #0a1f17;
+    --line: rgba(245, 243, 234, 0.16);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background:
+      repeating-linear-gradient(
+        0deg,
+        var(--grass) 0px,
+        var(--grass) 64px,
+        var(--grass-light) 64px,
+        var(--grass-light) 128px
+      );
+    color: var(--chalk);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    min-height: 100vh;
+    padding: 0 0 80px 0;
+  }
+
+  .hero {
+    text-align: center;
+    padding: 56px 20px 40px;
+  }
+
+  .hero::after {
+    content: "";
+    display: block;
+    width: 120px;
+    height: 3px;
+    background: var(--gold);
+    margin: 28px auto 0;
+    border-radius: 2px;
+  }
+
+  .eyebrow {
+    font-size: 13px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--gold-bright);
+    font-weight: 700;
+    margin: 0 0 14px;
+  }
+
+  h1 {
+    font-size: clamp(34px, 6vw, 58px);
+    line-height: 1.02;
+    margin: 0;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    font-style: italic;
+  }
+
+  h1 span {
+    display: block;
+    color: var(--chalk);
+  }
+
+  .subtitle {
+    color: rgba(245, 243, 234, 0.65);
+    font-size: 15px;
+    margin: 18px auto 0;
+    max-width: 420px;
+    line-height: 1.5;
+  }
+
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 18px;
+  }
+
+  .board {
+    background: var(--ink);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6), 0 0 0 1px var(--line);
+  }
+
+  .board-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 20px 24px 14px;
+    border-bottom: 1px dashed var(--line);
+  }
+
+  .board-header h2 {
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold-bright);
+    margin: 0;
+    font-weight: 800;
+  }
+
+  .board-header .updated {
+    font-size: 11px;
+    color: rgba(245, 243, 234, 0.4);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .team-row {
+    display: grid;
+    grid-template-columns: 36px 1fr 64px;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .team-row:last-child { border-bottom: none; }
+  .team-row.rank-1 { background: rgba(227, 179, 65, 0.1); }
+
+  .rank {
+    font-weight: 900;
+    font-size: 20px;
+    font-style: italic;
+    color: rgba(245, 243, 234, 0.3);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rank-1 .rank { color: var(--gold); }
+  .rank-2 .rank, .rank-3 .rank { color: rgba(245, 243, 234, 0.55); }
+
+  .team-info { min-width: 0; }
+
+  .team-name {
+    font-weight: 800;
+    font-size: 17px;
+    letter-spacing: -0.01em;
+    margin-bottom: 7px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .bar-track {
+    height: 6px;
+    background: rgba(245, 243, 234, 0.08);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-bright));
+    transition: width 0.6s cubic-bezier(.2,.8,.2,1);
+    width: 0%;
+  }
+
+  .rank-1 .bar-fill { background: linear-gradient(90deg, var(--red-card), var(--gold-bright)); }
+
+  .percent {
+    text-align: right;
+    font-weight: 900;
+    font-size: 19px;
+    font-style: italic;
+    font-variant-numeric: tabular-nums;
+    color: var(--chalk);
+  }
+
+  .percent .sign {
+    font-size: 11px;
+    opacity: 0.5;
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  #status {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(245, 243, 234, 0.5);
+    font-size: 14px;
+  }
+
+  .whistle {
+    display: inline-block;
+    animation: spin 1.4s linear infinite;
+    margin-right: 8px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .footnote {
+    text-align: center;
+    font-size: 12px;
+    color: rgba(245, 243, 234, 0.35);
+    margin-top: 22px;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 480px) {
+    .team-name { font-size: 15px; }
+    .percent { font-size: 16px; }
+  }
+
+  /* ===== SECTION HEADINGS ===== */
+  .section-gap {
+    height: 64px;
+  }
+
+  .section-title {
+    text-align: center;
+    margin: 0 0 28px;
+  }
+
+  .section-title .eyebrow {
+    margin-bottom: 8px;
+  }
+
+  .section-title h2 {
+    font-size: clamp(22px, 4vw, 30px);
+    font-weight: 900;
+    font-style: italic;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  /* ===== UPCOMING MATCHES ===== */
+  .match-card {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .match-card:last-child { border-bottom: none; }
+
+  .match-date {
+    grid-column: 1 / -1;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold-bright);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .match-team {
+    font-weight: 800;
+    font-size: 15px;
+  }
+
+  .match-team.away { text-align: right; }
+
+  .match-vs {
+    font-size: 11px;
+    color: rgba(245, 243, 234, 0.35);
+    font-weight: 700;
+    padding: 0 6px;
+  }
+
+  .match-probs {
+    grid-column: 1 / -1;
+    display: flex;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 10px;
+  }
+
+  .prob-seg { height: 100%; }
+  .prob-seg.win { background: var(--gold-bright); }
+  .prob-seg.draw { background: rgba(245, 243, 234, 0.25); }
+  .prob-seg.loss { background: var(--red-card); }
+
+  .match-legend {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: rgba(245, 243, 234, 0.45);
+    margin-top: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ===== BRACKET SIMULATOR ===== */
+  .sim-controls {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  .sim-btn {
+    background: var(--gold);
+    color: var(--ink);
+    border: none;
+    padding: 14px 30px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease;
+    font-family: inherit;
+  }
+
+  .sim-btn:hover { background: var(--gold-bright); transform: translateY(-1px); }
+  .sim-btn:active { transform: translateY(0); }
+  .sim-btn:disabled { opacity: 0.5; cursor: wait; }
+
+  .round-nav {
+    display: flex;
+    gap: 6px;
+    padding: 16px 22px;
+    border-bottom: 1px dashed var(--line);
+    overflow-x: auto;
+  }
+
+  .round-pill {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: rgba(245, 243, 234, 0.5);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 7px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .round-pill.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--ink);
+  }
+
+  .bracket-match {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 22px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .bracket-match:last-child { border-bottom: none; }
+
+  .bracket-team {
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(245, 243, 234, 0.45);
+    text-align: left;
+  }
+
+  .bracket-team.away { text-align: right; }
+  .bracket-team.winner { color: var(--gold-bright); }
+
+  .bracket-vs {
+    font-size: 10px;
+    color: rgba(245, 243, 234, 0.3);
+    font-weight: 700;
+  }
+
+  .winner-banner {
+    text-align: center;
+    padding: 34px 22px;
+    background: linear-gradient(180deg, rgba(227,179,65,0.14), transparent);
+  }
+
+  .winner-banner .trophy { font-size: 34px; display: block; margin-bottom: 10px; }
+  .winner-banner .label {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold-bright);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .winner-banner .team {
+    font-size: 28px;
+    font-weight: 900;
+    font-style: italic;
+    text-transform: uppercase;
+  }
+
+  /* ===== TRACK RECORD ===== */
+  .accuracy-banner {
+    text-align: center;
+    padding: 32px 22px;
+    border-bottom: 1px dashed var(--line);
+  }
+
+  .accuracy-banner .big-num {
+    font-size: 52px;
+    font-weight: 900;
+    font-style: italic;
+    color: var(--gold-bright);
+    line-height: 1;
+  }
+
+  .accuracy-banner .big-label {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(245, 243, 234, 0.45);
+    margin-top: 8px;
+    font-weight: 700;
+  }
+
+  .history-row {
+    display: grid;
+    grid-template-columns: 22px 1fr auto 1fr;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 22px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .history-row:last-child { border-bottom: none; }
+
+  .history-mark {
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .history-row.hit .history-mark { color: var(--gold-bright); }
+  .history-row.miss .history-mark { color: rgba(245, 243, 234, 0.25); }
+
+  .history-team {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .history-team.away { text-align: right; }
+
+  .history-score {
+    font-size: 11px;
+    color: rgba(245, 243, 234, 0.4);
+    font-weight: 700;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+  <div class="hero">
+    <p class="eyebrow">Monte Carlo simulation · 10,000 tournaments</p>
+    <h1>Who's<span>lifting the cup?</span></h1>
+    <p class="subtitle">Predictions for the 2026 World Cup, recalculated from real results as the tournament unfolds.</p>
+  </div>
+
+  <div class="container">
+    <div class="board" id="board">
+      <div id="status"><span class="whistle">⚽</span>Kicking off the calculation…</div>
+    </div>
+    <p class="footnote">Rankings based on an XGBoost model trained on international match history<br>and Elo ratings for the 48 qualified nations.</p>
+  </div>
+
+  <div class="section-gap"></div>
+
+  <div class="container">
+    <div class="section-title">
+      <p class="eyebrow">Up next</p>
+      <h2>Coming matches</h2>
+    </div>
+    <div class="board" id="upcoming-board">
+      <div id="upcoming-status"><span class="whistle">⚽</span>Loading the fixture list…</div>
+    </div>
+  </div>
+
+  <div class="section-gap"></div>
+
+  <div class="container">
+    <div class="section-title">
+      <p class="eyebrow">Run it yourself</p>
+      <h2>Simulate a tournament</h2>
+    </div>
+    <div class="sim-controls">
+      <button class="sim-btn" id="sim-btn">Kick off a simulation</button>
+    </div>
+    <div class="board" id="sim-board" style="display:none;"></div>
+  </div>
+
+  <div class="section-gap"></div>
+
+  <div class="container">
+    <div class="section-title">
+      <p class="eyebrow">How's the model doing</p>
+      <h2>Track record</h2>
+    </div>
+    <div class="board" id="history-board">
+      <div id="history-status"><span class="whistle">⚽</span>Checking the scoreboard…</div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "http://localhost:8000/monte-carlo";
+
+    fetch(API_URL)
+      .then(res => {
+        if (!res.ok) throw new Error("API error " + res.status);
+        return res.json();
+      })
+      .then(data => {
+        const board = document.getElementById('board');
+        const total = data.reduce((sum, [, wins]) => sum + wins, 0);
+        const maxWins = Math.max(...data.map(([, wins]) => wins));
+        const top = data.slice(0, 16);
+
+        board.innerHTML = `
+          <div class="board-header">
+            <h2>Title favorites</h2>
+            <span class="updated">${new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+        `;
+
+        top.forEach(([team, wins], i) => {
+          const percent = ((wins / total) * 100).toFixed(1);
+          const barWidth = (wins / maxWins) * 100;
+          const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+
+          const row = document.createElement('div');
+          row.className = `team-row ${rankClass}`;
+          row.innerHTML = `
+            <div class="rank">${i + 1}</div>
+            <div class="team-info">
+              <div class="team-name">${team}</div>
+              <div class="bar-track"><div class="bar-fill" data-width="${barWidth}"></div></div>
+            </div>
+            <div class="percent">${percent}<span class="sign">%</span></div>
+          `;
+          board.appendChild(row);
+        });
+
+        requestAnimationFrame(() => {
+          document.querySelectorAll('.bar-fill').forEach(el => {
+            el.style.width = el.dataset.width + '%';
+          });
+        });
+      })
+      .catch(err => {
+        document.getElementById('status').innerHTML =
+          `Red card 🟥 — couldn't reach the API.<br>Make sure it's running on <code>localhost:8000</code>.`;
+        console.error(err);
+      });
+
+    // ===== UPCOMING MATCHES =====
+    const UPCOMING_URL = "http://localhost:8000/upcoming";
+
+    fetch(UPCOMING_URL)
+      .then(res => {
+        if (!res.ok) throw new Error("API error " + res.status);
+        return res.json();
+      })
+      .then(matches => {
+        const board = document.getElementById('upcoming-board');
+        board.innerHTML = '';
+
+        matches.forEach(m => {
+          const win = (m['P(W)'] * 100).toFixed(0);
+          const draw = (m['P(D)'] * 100).toFixed(0);
+          const loss = (m['P(L)'] * 100).toFixed(0);
+
+          const card = document.createElement('div');
+          card.className = 'match-card';
+          card.innerHTML = `
+            <div class="match-date">${m.date}</div>
+            <div class="match-team home">${m.home_team}</div>
+            <div class="match-vs">VS</div>
+            <div class="match-team away">${m.away_team}</div>
+            <div class="match-probs">
+              <div class="prob-seg win" style="width:${win}%"></div>
+              <div class="prob-seg draw" style="width:${draw}%"></div>
+              <div class="prob-seg loss" style="width:${loss}%"></div>
+            </div>
+            <div class="match-legend">
+              <span>${m.home_team} ${win}%</span>
+              <span>Draw ${draw}%</span>
+              <span>${m.away_team} ${loss}%</span>
+            </div>
+          `;
+          board.appendChild(card);
+        });
+      })
+      .catch(err => {
+        document.getElementById('upcoming-status').innerHTML =
+          `Red card 🟥 — couldn't load upcoming matches.`;
+        console.error(err);
+      });
+
+    // ===== BRACKET SIMULATOR =====
+    const SIMULATE_URL = "http://localhost:8000/simulate-bracket";
+    const ROUND_LABELS = { R32: 'Round of 32', R16: 'Round of 16', QF: 'Quarter-finals', SF: 'Semi-finals', F: 'Final' };
+
+    const simBtn = document.getElementById('sim-btn');
+    const simBoard = document.getElementById('sim-board');
+
+    simBtn.addEventListener('click', () => {
+      simBtn.disabled = true;
+      simBtn.textContent = 'Simulating…';
+
+      fetch(SIMULATE_URL)
+        .then(res => {
+          if (!res.ok) throw new Error("API error " + res.status);
+          return res.json();
+        })
+        .then(data => {
+          simBtn.disabled = false;
+          simBtn.textContent = 'Run another simulation';
+          renderBracket(data.history, data.winner);
+        })
+        .catch(err => {
+          simBtn.disabled = false;
+          simBtn.textContent = 'Try again';
+          console.error(err);
+        });
+    });
+
+    function renderBracket(history, winner) {
+      simBoard.style.display = 'block';
+      const rounds = Object.keys(history);
+
+      simBoard.innerHTML = `
+        <div class="round-nav" id="round-nav"></div>
+        <div id="round-content"></div>
+        <div class="winner-banner">
+          <span class="trophy">🏆</span>
+          <div class="label">Champion</div>
+          <div class="team">${winner}</div>
+        </div>
+      `;
+
+      const nav = document.getElementById('round-nav');
+      const content = document.getElementById('round-content');
+
+      rounds.forEach((r, i) => {
+        const pill = document.createElement('button');
+        pill.className = 'round-pill' + (i === 0 ? ' active' : '');
+        pill.textContent = ROUND_LABELS[r] || r;
+        pill.addEventListener('click', () => {
+          document.querySelectorAll('.round-pill').forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          showRound(r);
+        });
+        nav.appendChild(pill);
+      });
+
+      function showRound(roundKey) {
+        content.innerHTML = '';
+        history[roundKey].forEach(m => {
+          const row = document.createElement('div');
+          row.className = 'bracket-match';
+          const homeWon = m.winner === m.home;
+          row.innerHTML = `
+            <div class="bracket-team ${homeWon ? 'winner' : ''}">${m.home}</div>
+            <div class="bracket-vs">VS</div>
+            <div class="bracket-team away ${!homeWon ? 'winner' : ''}">${m.away}</div>
+          `;
+          content.appendChild(row);
+        });
+      }
+
+      showRound(rounds[0]);
+    }
+
+    // ===== TRACK RECORD =====
+    const HISTORY_URL = "http://localhost:8000/history";
+
+    fetch(HISTORY_URL)
+      .then(res => {
+        if (!res.ok) throw new Error("API error " + res.status);
+        return res.json();
+      })
+      .then(data => {
+        const board = document.getElementById('history-board');
+        const accuracyPct = (data.accuracy * 100).toFixed(0);
+
+        board.innerHTML = `
+          <div class="accuracy-banner">
+            <div class="big-num">${accuracyPct}%</div>
+            <div class="big-label">Correct predictions so far</div>
+          </div>
+        `;
+
+        data.matches.forEach(m => {
+          const hit = m.correct === true;
+          const row = document.createElement('div');
+          row.className = 'history-row ' + (hit ? 'hit' : 'miss');
+          row.innerHTML = `
+            <div class="history-mark">${hit ? '✓' : '✕'}</div>
+            <div class="history-team">${m.home_team}</div>
+            <div class="history-score">vs</div>
+            <div class="history-team away">${m.away_team}</div>
+          `;
+          board.appendChild(row);
+        });
+      })
+      .catch(err => {
+        document.getElementById('history-status').innerHTML =
+          `Red card 🟥 — couldn't load the track record.`;
+        console.error(err);
+      });
+  </script>
+</body>
+</html>
