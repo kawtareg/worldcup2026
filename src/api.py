@@ -15,28 +15,28 @@ state = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Loading ELO...")
+    print("Loading ELO...", flush=True)
     state['df_elo'] = process_elo(load_elo())
-    print("Loading results...")
+    print("Loading results...", flush=True)
     state['df_raw'] = load_results()
-    print("Processing results...")
+    print("Processing results...", flush=True)
     state['df'] = process_results(state['df_raw'], state['df_elo'])
-    print("Building team view...")
+    print("Building team view...", flush=True)
     state['df_teams'] = matches_per_team(state['df'])
-    print("Adding form features...")
+    print("Adding form features...", flush=True)
     state['df'] = add_form_features(state['df'], state['df_teams'], n=5)
-    print("Adding elo features...")
+    print("Adding elo features...", flush=True)
     state['df'] = add_elo_features(state['df'], state['df_elo'])
-    print("Adding results...")
+    print("Adding results...", flush=True)
     state['df'] = add_results(state['df'])
-    print("Loading/training model...")
+    print("Loading/training model...", flush=True)
     model_path = Path('..') / 'models' / 'xgboost.pkl'
     if model_path.exists():
         state['model'] = joblib.load(model_path)
     else:
         X_train, X_test, y_train, y_test = prepare_data(state['df'])
         state['model'] = train_model(X_train, X_test, y_train, y_test)
-    print("Loading monte carlo...")
+    print("Loading monte carlo...", flush=True)
     state['monte_carlo'] = monte_carlo(state['model'], state['df_teams'],
         state['df_elo'], n=100)
     yield
