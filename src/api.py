@@ -21,6 +21,7 @@ async def lifespan(app: FastAPI):
     state['df_raw'] = load_results()
     print("Processing results...", flush=True)
     state['df'] = process_results(state['df_raw'], state['df_elo'])
+    state['df'] = state['df'][state['df']['date'] >= '2015-01-01']
     print("Building team view...", flush=True)
     state['df_teams'] = matches_per_team(state['df'])
     print("Adding form features...", flush=True)
