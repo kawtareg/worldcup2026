@@ -511,7 +511,7 @@
   </div>
 
   <script>
-    const API_URL = "http://localhost:8000/monte-carlo";
+    const API_URL = "https://worldcup2026-wn2m.onrender.com";
 
     fetch(API_URL)
       .then(res => {
@@ -557,12 +557,12 @@
       })
       .catch(err => {
         document.getElementById('status').innerHTML =
-          `Red card 🟥 — couldn't reach the API.<br>Make sure it's running on <code>localhost:8000</code>.`;
+          `Red card 🟥 — couldn't reach the API.<br>Make sure it's running on <code>worldcup2026-wn2m.onrender</code>.`;
         console.error(err);
       });
 
     // ===== UPCOMING MATCHES =====
-    const UPCOMING_URL = "http://localhost:8000/upcoming";
+    const UPCOMING_URL = "https://worldcup2026-wn2m.onrender.com/upcoming";
 
     fetch(UPCOMING_URL)
       .then(res => {
@@ -606,7 +606,7 @@
       });
 
     // ===== BRACKET SIMULATOR =====
-    const SIMULATE_URL = "http://localhost:8000/simulate-bracket";
+    const SIMULATE_URL = "https://worldcup2026-wn2m.onrender.com/simulate-bracket";
     const ROUND_LABELS = { R32: 'Round of 32', R16: 'Round of 16', QF: 'Quarter-finals', SF: 'Semi-finals', F: 'Final' };
 
     const simBtn = document.getElementById('sim-btn');
@@ -681,7 +681,7 @@
     }
 
     // ===== TRACK RECORD =====
-    const HISTORY_URL = "http://localhost:8000/history";
+    const HISTORY_URL = "https://worldcup2026-wn2m.onrender.com/history";
 
     fetch(HISTORY_URL)
       .then(res => {

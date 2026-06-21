@@ -10,41 +10,31 @@ from simulate import simulate_group_stage, build_predictions_df, simulate_group_
 from simulate import resolve_bracket, ROUND_OF_32, simulate_tournament, monte_carlo, predict_match, evaluate_predictions
 
 from contextlib import asynccontextmanager
+from fastapi.middleware.cors import CORSMiddleware
 
 state = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Loading ELO...", flush=True)
     state['df_elo'] = process_elo(load_elo())
-    print("Loading results...", flush=True)
     state['df_raw'] = load_results()
-    print("Processing results...", flush=True)
     state['df'] = process_results(state['df_raw'], state['df_elo'])
     state['df'] = state['df'][state['df']['date'] >= '2015-01-01']
-    print("Building team view...", flush=True)
     state['df_teams'] = matches_per_team(state['df'])
-    print("Adding form features...", flush=True)
     state['df'] = add_form_features(state['df'], state['df_teams'], n=5)
-    print("Adding elo features...", flush=True)
     state['df'] = add_elo_features(state['df'], state['df_elo'])
-    print("Adding results...", flush=True)
     state['df'] = add_results(state['df'])
-    print("Loading/training model...", flush=True)
     model_path = Path('..') / 'models' / 'xgboost.pkl'
     if model_path.exists():
         state['model'] = joblib.load(model_path)
     else:
         X_train, X_test, y_train, y_test = prepare_data(state['df'])
         state['model'] = train_model(X_train, X_test, y_train, y_test)
-    print("Loading monte carlo...", flush=True)
     state['monte_carlo'] = monte_carlo(state['model'], state['df_teams'],
         state['df_elo'], n=100)
     yield
 
 app = FastAPI(lifespan=lifespan)
-
-from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
