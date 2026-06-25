@@ -15,33 +15,32 @@ from simulate import resolve_bracket, ROUND_OF_32, simulate_tournament, monte_ca
 state = {}
 
 async def run_monte_carlo_background():
-    loop = asyncio.get_event_loop()
-    result = await loop.run_in_executor(None, lambda: monte_carlo(state['model'], state['df_teams'], state['df_elo'], n=1000))
-    state['monte_carlo'] = result
+    try:
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(None, lambda: monte_carlo(state['model'], state['df_teams'], state['df_elo'], n=100))
+        state['monte_carlo'] = result
+        print(f"Monte Carlo done! {len(result)} teams", flush=True)
+    except Exception as e:
+        print(f"Monte Carlo ERROR: {e}", flush=True)
+        state['monte_carlo'] = []
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     state['monte_carlo'] = []
-    print("Loading df elo...", flush=True)
     state['df_elo'] = process_elo(load_elo())
-    print("Loading dfraw...", flush=True)
     state['df_raw'] = load_results()
-    print("Loading df...", flush=True)
     state['df'] = pd.read_csv(Path(__file__).parent.parent / 'data' / 'processed' / 'features.csv')
     state['df']['date'] = pd.to_datetime(state['df']['date'])
-    print("Loading df teams...", flush=True)
     state['df_teams'] = pd.read_csv(Path(__file__).parent.parent / 'data' / 'processed' / 'df_teams.csv')
     state['df_teams']['date'] = pd.to_datetime(state['df_teams']['date'])
     state['df_teams']['goals_scored'] = pd.to_numeric(state['df_teams']['goals_scored'], errors='coerce').fillna(0)
     state['df_teams']['goals_conceded'] = pd.to_numeric(state['df_teams']['goals_conceded'], errors='coerce').fillna(0)
-    print("Loading model...", flush=True)
     model_path = Path('..') / 'models' / 'xgboost.pkl'
     if model_path.exists():
         state['model'] = joblib.load(model_path)
     else:
         X_train, X_test, y_train, y_test = prepare_data(state['df'])
         state['model'] = train_model(X_train, X_test, y_train, y_test)
-    print("Loading mc...", flush=True)
     asyncio.create_task(run_monte_carlo_background())
     yield
 
