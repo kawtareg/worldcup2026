@@ -1,0 +1,12 @@
+name: Keep API alive
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'  # toutes les 10 minutes
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping API
+        run: curl https://worldcup2026-wn2m.onrender.com/
