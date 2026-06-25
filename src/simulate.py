@@ -351,11 +351,13 @@ def monte_carlo(model, df_teams, df_elo, n=1000):
     all_teams = [t for teams in GROUPS.values() for t in teams]
     team_features = {}
     for team in all_teams:
-        form, avg_scored, avg_conceded = get_team_form(df_teams, team, date, df_elo=df_elo)
         elo = get_elo(df_elo, team, date)
+        form, avg_scored, avg_conceded = get_team_form(df_teams, team, date, df_elo=df_elo)
         team_features[team] = {
-            'form': float(form), 'elo': float(elo),
-            'avg_scored': float(avg_scored), 'avg_conceded': float(avg_conceded)
+            'form': float(form) if form != '' and form is not None else 0.0,
+            'elo': float(elo),
+            'avg_scored': float(avg_scored) if avg_scored != '' and avg_scored is not None else 0.0,
+            'avg_conceded': float(avg_conceded) if avg_conceded != '' and avg_conceded is not None else 0.0
         }
 
     wins_count = {team: 0 for team in all_teams}
