@@ -27,7 +27,7 @@ ROUND_OF_32 = [
     ('T1', 'T2'), ('T3', 'T4'), ('T5', 'T6'), ('T7', 'T8'),
 ]
 
-def predict_match(model, df_teams, df_elo, home_team, away_team, date):
+def predict_match(model, df_teams, df_elo, home_team, away_team, date, team_features=None):
     """Predict match outcome probabilities using the trained model.
 
     Args:
@@ -37,13 +37,22 @@ def predict_match(model, df_teams, df_elo, home_team, away_team, date):
         home_team (str): Name of the home team.
         away_team (str): Name of the away team.
         date (pd.Timestamp): Date of the match.
+        team_features (dict, optional): Precomputed features per team. If provided,
+            skips DataFrame filtering for faster computation.
 
     Returns:
         np.ndarray: Array of probabilities [P(W), P(D), P(L)].
     """
-    home_form, home_wins = get_team_form(df_teams, home_team, date)
-    away_form, away_wins = get_team_form(df_teams, away_team, date)
-    elo_diff = get_elo(df_elo, home_team, date) - get_elo(df_elo, away_team, date)
+    if team_features:
+        home = team_features[home_team]
+        away = team_features[away_team]
+        home_form, home_wins = home['form'], home['wins']
+        away_form, away_wins = away['form'], away['wins']
+        elo_diff = home['elo'] - away['elo']
+    else:
+        home_form, home_wins = get_team_form(df_teams, home_team, date)
+        away_form, away_wins = get_team_form(df_teams, away_team, date)
+        elo_diff = get_elo(df_elo, home_team, date) - get_elo(df_elo, away_team, date)
     X = pd.DataFrame({
         'home_form': [home_form],
         'away_form': [away_form],
@@ -51,10 +60,9 @@ def predict_match(model, df_teams, df_elo, home_team, away_team, date):
         'home_wins': [home_wins],
         'away_wins': [away_wins]
     })
-    probas = model.predict_proba(X)
-    return probas
+    return model.predict_proba(X)
 
-def simulate_knockout_match(model, df_teams, df_elo, home_team, away_team, date):
+def simulate_knockout_match(model, df_teams, df_elo, home_team, away_team, date, team_features=None):
     """Simulate a knockout match and return the winner.
 
     Args:
@@ -64,39 +72,37 @@ def simulate_knockout_match(model, df_teams, df_elo, home_team, away_team, date)
         home_team (str): Name of the home team.
         away_team (str): Name of the away team.
         date (pd.Timestamp): Date of the match.
+        team_features (dict, optional): Precomputed features per team.
 
     Returns:
         str: Name of the winning team.
     """
-    probas = predict_match(model, df_teams, df_elo, home_team, away_team, date)
+    probas = predict_match(model, df_teams, df_elo, home_team, away_team, date, team_features)
     p_home = float(probas[0][0])
     p_away = float(probas[0][2])
     total = p_home + p_away
     p_home = p_home / total
-    p_away = p_away / total
-    p_home = round(p_home, 10)
-    p_away = round(p_away, 10)
     p_away = 1 - p_home
-    winner = np.random.choice([home_team, away_team], p=[p_home, p_away])
-    return winner
+    return np.random.choice([home_team, away_team], p=[p_home, p_away])
 
-def simulate_group(model, df_teams, df_elo, teams, date):
-    """Simulate a group stage and return the two qualified teams.
+def simulate_group(model, df_teams, df_elo, teams, date, team_features=None):
+    """Simulate a group stage and return the qualified teams.
 
     Args:
         model (XGBClassifier): Trained XGBoost model.
         df_teams (pd.DataFrame): Team-level match dataframe.
         df_elo (pd.DataFrame): Processed ELO ratings dataframe.
         teams (list): List of 4 team names in the group.
-        date (list): List of 6 match dates.
+        date (pd.Timestamp): Reference date for feature calculation.
+        team_features (dict, optional): Precomputed features per team.
 
     Returns:
-        list: The two qualified teams sorted by points descending.
+        tuple: (first, second, third, points_third) qualified teams sorted by points.
     """
-    matches = list(combinations(teams, 2))
+    matchs = list(combinations(teams, 2))
     points = {team: 0 for team in teams}
-    for match in matches:
-        probas = predict_match(model, df_teams, df_elo, match[0], match[1], date)
+    for match in matchs:
+        probas = predict_match(model, df_teams, df_elo, match[0], match[1], date, team_features)
         result = np.random.choice(['W', 'D', 'L'], p=probas[0])
         if result == 'W':
             points[match[0]] += 3
@@ -108,31 +114,54 @@ def simulate_group(model, df_teams, df_elo, teams, date):
     qualifies = sorted(points, key=lambda x: points[x], reverse=True)
     return qualifies[0], qualifies[1], qualifies[2], points[qualifies[2]]
 
-def simulate_group_stage(model, df_teams, df_elo):
+def simulate_group_stage(model, df_teams, df_elo, team_features=None):
     """Simulate all 12 group stages and return qualified teams and best third-place finishers.
 
     Args:
         model (XGBClassifier): Trained XGBoost model.
         df_teams (pd.DataFrame): Team-level match dataframe.
         df_elo (pd.DataFrame): Processed ELO ratings dataframe.
+        team_features (dict, optional): Precomputed features per team.
 
     Returns:
-        tuple: 
+        tuple:
             - results (dict): Maps group letter to (first, second) qualified teams.
-            - best_thirds (list): 8 best third-place finishers as (group, (team, points))
-            sorted by points.
+            - best_thirds (list): 8 best third-place finishers sorted by points.
     """
     results = {}
     thirds = {}
-
+    date = pd.Timestamp('2026-06-11')
     for group, teams in GROUPS.items():
         first, second, third, points_third = simulate_group(
-            model, df_teams, df_elo, teams, pd.Timestamp('2026-06-11'))
+            model, df_teams, df_elo, teams, date, team_features)
         results[group] = (first, second)
         thirds[group] = (third, points_third)
-
     best_thirds = sorted(thirds.items(), key=lambda x: x[1][1], reverse=True)[:8]
     return results, best_thirds
+
+
+def simulate_knockout_stage(model, df_teams, df_elo, matches, date, team_features=None):
+    """Simulate one knockout round and return the winners.
+
+    Args:
+        model (XGBClassifier): Trained XGBoost model.
+        df_teams (pd.DataFrame): Team-level match dataframe.
+        df_elo (pd.DataFrame): Processed ELO ratings dataframe.
+        matches (list): List of (home_team, away_team) tuples.
+        date (pd.Timestamp): Date used for feature calculation.
+        team_features (dict, optional): Precomputed features per team.
+
+    Returns:
+        tuple: (winners list, results list with home/away/winner dicts).
+    """
+    winners = []
+    results = []
+    for match in matches:
+        winner = simulate_knockout_match(
+            model, df_teams, df_elo, match[0], match[1], date, team_features)
+        winners.append(winner)
+        results.append({'home': match[0], 'away': match[1], 'winner': winner})
+    return winners, results
 
 def get_predicted_winner(probas, home_team, away_team):
     """Determine the predicted winner from model output probabilities.
@@ -293,7 +322,7 @@ def simulate_knockout_stage(model, df_teams, df_elo, matches, date):
         results.append({'home': match[0], 'away': match[1], 'winner': winner})
     return winners, results
 
-def simulate_tournament(model, df_teams, df_elo, matches, date):
+def simulate_tournament(model, df_teams, df_elo, matches, date, team_features=None):
     """Simulate the full knockout tournament from round of 32 to the final.
 
     Args:
@@ -302,39 +331,48 @@ def simulate_tournament(model, df_teams, df_elo, matches, date):
         df_elo (pd.DataFrame): Processed ELO ratings dataframe.
         matches (list): List of (home_team, away_team) tuples for the round of 32.
         date (pd.Timestamp): Date used for feature calculation.
+        team_features (dict, optional): Precomputed features per team.
 
     Returns:
         tuple:
-            - history (dict): Maps round name to list of winners.
+            - history (dict): Maps round name to list of match results.
             - winner (str): Name of the tournament winner.
     """
     rounds = ['R32', 'R16', 'QF', 'SF', 'F']
     history = {}
     for round_name in rounds:
-        winners, results = simulate_knockout_stage(model, df_teams, df_elo, matches, date)
+        winners, results = simulate_knockout_stage(
+            model, df_teams, df_elo, matches, date, team_features)
         history[round_name] = results
         if round_name == 'F':
             break
         matches = [(winners[i], winners[i+1]) for i in range(0, len(winners), 2)]
     return history, winners[0]
 
-def monte_carlo(model, df_teams, df_elo, n=10000):
+def monte_carlo(model, df_teams, df_elo, n=1000):
     """Run Monte Carlo simulations to estimate each team's probability of winning the World Cup.
 
     Args:
         model (XGBClassifier): Trained XGBoost model.
         df_teams (pd.DataFrame): Team-level match dataframe.
         df_elo (pd.DataFrame): Processed ELO ratings dataframe.
-        n (int): Number of simulations to run. Defaults to 10000.
+        n (int): Number of simulations to run. Defaults to 1000.
 
     Returns:
         list: List of (team, wins) tuples sorted by wins descending.
     """
-    wins = {team: 0 for team in [t for teams in GROUPS.values() for t in teams]}
-    for i in range(n):
-        results, best_thirds = simulate_group_stage(model, df_teams, df_elo)
+    date = pd.Timestamp('2026-06-11')
+    all_teams = [t for teams in GROUPS.values() for t in teams]
+    team_features = {}
+    for team in all_teams:
+        form, wins = get_team_form(df_teams, team, date)
+        elo = get_elo(df_elo, team, date)
+        team_features[team] = {'form': form, 'wins': wins, 'elo': elo}
+
+    wins_count = {team: 0 for team in all_teams}
+    for _ in range(n):
+        results, best_thirds = simulate_group_stage(model, df_teams, df_elo, team_features)
         matches = resolve_bracket(ROUND_OF_32, results, best_thirds)
-        date = pd.Timestamp('2026-06-29')
-        _, winner = simulate_tournament(model, df_teams, df_elo, matches, date)
-        wins[winner]+=1
-    return sorted(wins.items(), key=lambda x: x[1], reverse=True)
+        _, winner = simulate_tournament(model, df_teams, df_elo, matches, date, team_features)
+        wins_count[winner] += 1
+    return sorted(wins_count.items(), key=lambda x: x[1], reverse=True)
