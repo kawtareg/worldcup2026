@@ -3,5 +3,5 @@
 __pycache__/
 *.pyc
 .DS_Store
-data/
+data/raw/elo_ratings_wc2026.csv
 

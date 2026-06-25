@@ -2,36 +2,45 @@ from fastapi import FastAPI
 from pathlib import Path
 import pandas as pd
 import joblib
+from contextlib import asynccontextmanager
+from fastapi.middleware.cors import CORSMiddleware
+import asyncio
+import json
 
-from data import load_results, process_results, load_elo, process_elo
-from features import matches_per_team, add_form_features, add_elo_features, add_results
+from data import load_results, load_elo, process_elo
 from train import prepare_data, train_model
 from simulate import simulate_group_stage, build_predictions_df, simulate_group_stage, simulate_knockout_match
 from simulate import resolve_bracket, ROUND_OF_32, simulate_tournament, monte_carlo, predict_match, evaluate_predictions
 
-from contextlib import asynccontextmanager
-from fastapi.middleware.cors import CORSMiddleware
-
 state = {}
+
+async def run_monte_carlo_background():
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(None, lambda: monte_carlo(state['model'], state['df_teams'], state['df_elo'], n=1000))
+    state['monte_carlo'] = result
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    state['monte_carlo'] = []
+    print("Loading df elo...", flush=True)
     state['df_elo'] = process_elo(load_elo())
+    print("Loading dfraw...", flush=True)
     state['df_raw'] = load_results()
-    state['df'] = process_results(state['df_raw'], state['df_elo'])
-    state['df'] = state['df'][state['df']['date'] >= '2015-01-01']
-    state['df_teams'] = matches_per_team(state['df'])
-    state['df'] = add_form_features(state['df'], state['df_teams'], n=5)
-    state['df'] = add_elo_features(state['df'], state['df_elo'])
-    state['df'] = add_results(state['df'])
+    print("Loading df...", flush=True)
+    state['df'] = pd.read_csv(Path(__file__).parent.parent / 'data' / 'processed' / 'features.csv')
+    state['df']['date'] = pd.to_datetime(state['df']['date'])
+    print("Loading df teams...", flush=True)
+    state['df_teams'] = pd.read_csv(Path(__file__).parent.parent / 'data' / 'processed' / 'df_teams.csv')
+    state['df_teams']['date'] = pd.to_datetime(state['df_teams']['date'])
+    print("Loading model...", flush=True)
     model_path = Path('..') / 'models' / 'xgboost.pkl'
     if model_path.exists():
         state['model'] = joblib.load(model_path)
     else:
         X_train, X_test, y_train, y_test = prepare_data(state['df'])
         state['model'] = train_model(X_train, X_test, y_train, y_test)
-    state['monte_carlo'] = monte_carlo(state['model'], state['df_teams'],
-        state['df_elo'], n=100)
+    print("Loading mc...", flush=True)
+    asyncio.create_task(run_monte_carlo_background())
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -47,8 +56,6 @@ app.add_middleware(
 def root():
     return {"message": "World Cup 2026 Prediction API"}
 
-import json
-
 
 @app.get("/predictions")
 def get_predictions():
@@ -59,6 +66,8 @@ def get_predictions():
 
 @app.get("/monte-carlo")
 def get_winners():
+    if not state['monte_carlo']:
+        return {"status": "calculating", "message": "Monte Carlo simulation in progress, try again in a minute"}
     return state['monte_carlo']
 
 @app.get("/match/{home}/{away}")

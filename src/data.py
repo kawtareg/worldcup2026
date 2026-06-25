@@ -3,7 +3,7 @@
 from pathlib import Path
 import pandas as pd
 
-def load_results():
+def load_results(force_download=False):
     """Load international football match results from local storage or download from GitHub.
 
     Returns:
@@ -11,7 +11,7 @@ def load_results():
             home_score, away_score, tournament, neutral.
     """
     path = Path(__file__).parent.parent / "data" / "raw" / "results.csv"
-    if not path.exists():
+    if not path.exists() or force_download:
         df = pd.read_csv(
             'https://github.com/martj42/international_results/raw/refs/heads/master/results.csv')
         df = df[['date', 'home_team', 'away_team', 'home_score',
