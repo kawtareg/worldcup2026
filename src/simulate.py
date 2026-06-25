@@ -67,7 +67,7 @@ def predict_match(model, df_teams, df_elo, home_team, away_team, date, team_feat
     'away_avg_scored': [away_avg_scored],
     'home_avg_conceded': [home_avg_conceded],
     'away_avg_conceded': [away_avg_conceded],
-    })
+    }).astype(float)
     return model.predict_proba(X)
 
 def simulate_knockout_match(model, df_teams, df_elo, home_team, away_team, date, team_features=None):
@@ -354,8 +354,8 @@ def monte_carlo(model, df_teams, df_elo, n=1000):
         form, avg_scored, avg_conceded = get_team_form(df_teams, team, date, df_elo=df_elo)
         elo = get_elo(df_elo, team, date)
         team_features[team] = {
-            'form': form, 'elo': elo,
-            'avg_scored': avg_scored, 'avg_conceded': avg_conceded
+            'form': float(form), 'elo': float(elo),
+            'avg_scored': float(avg_scored), 'avg_conceded': float(avg_conceded)
         }
 
     wins_count = {team: 0 for team in all_teams}
