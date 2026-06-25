@@ -52,7 +52,7 @@ def get_team_form(df, team, date, n=5, df_elo=None):
         df_elo (pd.DataFrame, optional): ELO ratings dataframe for opponent weighting.
 
     Returns:
-        tuple: (goals_diff, wins, avg_scored, avg_conceded, clean_sheets)
+        tuple: (goals_diff, avg_scored, avg_conceded)
     """
     filtered_df = df[(df['date'] < date) & (df['team'] == team)].tail(n).copy()
     weights = tournament_weighting(filtered_df)
@@ -66,11 +66,9 @@ def get_team_form(df, team, date, n=5, df_elo=None):
 
     diff_per_match = filtered_df['goals_scored'] - filtered_df['goals_conceded']
     goals_diff = (diff_per_match * weights).sum()
-    wins = (filtered_df['goals_scored'] > filtered_df['goals_conceded']).sum()
     avg_scored = filtered_df['goals_scored'].mean() if len(filtered_df) > 0 else 0
     avg_conceded = filtered_df['goals_conceded'].mean() if len(filtered_df) > 0 else 0
-    clean_sheets = (filtered_df['goals_conceded'] == 0).sum()
-    return goals_diff, wins, avg_scored, avg_conceded, clean_sheets
+    return goals_diff, avg_scored, avg_conceded
 
 def get_elo(df_elo, team, date):
     """Get the most recent ELO rating for a team before a given date.
@@ -101,12 +99,12 @@ def add_form_features(df, df_teams, n=5, df_elo=None):
     Returns:
         pd.DataFrame: Match dataframe with form columns added.
     """
-    df[['home_form', 'home_wins', 'home_avg_scored', 
-        'home_avg_conceded', 'home_clean_sheets']] = df.apply(
+    df[['home_form', 'home_avg_scored', 
+        'home_avg_conceded']] = df.apply(
         lambda row: get_team_form(df_teams, row['home_team'], row['date'], n, df_elo),
         axis=1, result_type='expand')
-    df[['away_form', 'away_wins', 'away_avg_scored',
-        'away_avg_conceded', 'away_clean_sheets']] = df.apply(
+    df[['away_form', 'away_avg_scored',
+        'away_avg_conceded']] = df.apply(
         lambda row: get_team_form(df_teams, row['away_team'], row['date'], n, df_elo),
         axis=1, result_type='expand')
     return df
