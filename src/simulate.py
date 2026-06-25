@@ -47,18 +47,34 @@ def predict_match(model, df_teams, df_elo, home_team, away_team, date, team_feat
         home = team_features[home_team]
         away = team_features[away_team]
         home_form, home_wins = home['form'], home['wins']
+        home_avg_scored = home['avg_scored']
+        home_avg_conceded = home['avg_conceded']
+        home_clean_sheets = home['clean_sheets']
         away_form, away_wins = away['form'], away['wins']
+        away_avg_scored = away['avg_scored']
+        away_avg_conceded = away['avg_conceded']
+        away_clean_sheets = away['clean_sheets']
         elo_diff = home['elo'] - away['elo']
+        neutral = 1
     else:
-        home_form, home_wins = get_team_form(df_teams, home_team, date)
-        away_form, away_wins = get_team_form(df_teams, away_team, date)
+        home_form, home_wins, home_avg_scored, home_avg_conceded, home_clean_sheets = \
+            get_team_form(df_teams, home_team, date)
+        away_form, away_wins, away_avg_scored, away_avg_conceded, away_clean_sheets = \
+            get_team_form(df_teams, away_team, date)
         elo_diff = get_elo(df_elo, home_team, date) - get_elo(df_elo, away_team, date)
     X = pd.DataFrame({
         'home_form': [home_form],
         'away_form': [away_form],
         'elo_diff': [elo_diff],
         'home_wins': [home_wins],
-        'away_wins': [away_wins]
+        'away_wins': [away_wins],
+        'home_avg_scored': [home_avg_scored],
+        'away_avg_scored': [away_avg_scored],
+        'home_avg_conceded': [home_avg_conceded],
+        'away_avg_conceded': [away_avg_conceded],
+        'home_clean_sheets': [home_clean_sheets],
+        'away_clean_sheets': [away_clean_sheets],
+        'neutral': [neutral]
     })
     return model.predict_proba(X)
 
@@ -365,9 +381,13 @@ def monte_carlo(model, df_teams, df_elo, n=1000):
     all_teams = [t for teams in GROUPS.values() for t in teams]
     team_features = {}
     for team in all_teams:
-        form, wins = get_team_form(df_teams, team, date)
+        form, wins, avg_scored, avg_conceded, clean_sheets = get_team_form(df_teams, team, date, df_elo=df_elo)
         elo = get_elo(df_elo, team, date)
-        team_features[team] = {'form': form, 'wins': wins, 'elo': elo}
+        team_features[team] = {
+            'form': form, 'wins': wins, 'elo': elo,
+            'avg_scored': avg_scored, 'avg_conceded': avg_conceded,
+            'clean_sheets': clean_sheets
+        }
 
     wins_count = {team: 0 for team in all_teams}
     for _ in range(n):

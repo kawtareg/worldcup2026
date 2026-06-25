@@ -10,7 +10,7 @@ df = process_results(df_raw, df_elo)
 df_teams = matches_per_team(df)
 teams_path = Path(__file__).parent.parent / "data" / "processed" / "df_teams.csv"
 df_teams.to_csv(teams_path, index=False)
-df = add_form_features(df, df_teams, n=5)
+df = add_form_features(df, df_teams, n=5, df_elo=df_elo)
 df = add_elo_features(df, df_elo)
 df = add_results(df)
 path = Path(__file__).parent.parent / "data" / "processed" / "features.csv"
