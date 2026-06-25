@@ -32,6 +32,10 @@ async def lifespan(app: FastAPI):
     print("Loading df teams...", flush=True)
     state['df_teams'] = pd.read_csv(Path(__file__).parent.parent / 'data' / 'processed' / 'df_teams.csv')
     state['df_teams']['date'] = pd.to_datetime(state['df_teams']['date'])
+    state['df_teams']['goals_scored'] = pd.to_numeric(state['df_teams']['goals_scored'], errors='coerce').fillna(0)
+    state['df_teams']['goals_conceded'] = pd.to_numeric(state['df_teams']['goals_conceded'], errors='coerce').fillna(0)
+    state['df_teams']['tournament_weighting'] = pd.to_numeric(
+    state['df_teams']['tournament_weighting'], errors='coerce').fillna(0.1)
     print("Loading model...", flush=True)
     model_path = Path('..') / 'models' / 'xgboost.pkl'
     if model_path.exists():
