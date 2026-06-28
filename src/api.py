@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
 
 def _run_monte_carlo():
     try:
-        result = monte_carlo(state['model'], state['df_teams'], state['df_elo'], n=100)
+        result = monte_carlo(state['model'], state['df_teams'], state['df_elo'], n=20)
         state['monte_carlo'] = result
         print(f"Monte Carlo done! {len(result)} teams", flush=True)
     except Exception as e:
