@@ -14,16 +14,6 @@ from simulate import resolve_bracket, ROUND_OF_32, simulate_tournament, monte_ca
 
 state = {}
 
-async def run_monte_carlo_background():
-    try:
-        loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(None, lambda: monte_carlo(state['model'], state['df_teams'], state['df_elo'], n=100))
-        state['monte_carlo'] = result
-        print(f"Monte Carlo done! {len(result)} teams", flush=True)
-    except Exception as e:
-        print(f"Monte Carlo ERROR: {e}", flush=True)
-        state['monte_carlo'] = []
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     state['monte_carlo'] = []
@@ -41,8 +31,17 @@ async def lifespan(app: FastAPI):
     else:
         X_train, X_test, y_train, y_test = prepare_data(state['df'])
         state['model'] = train_model(X_train, X_test, y_train, y_test)
-    asyncio.create_task(run_monte_carlo_background())
+    loop = asyncio.get_event_loop()
+    loop.run_in_executor(None, lambda: _run_monte_carlo())
     yield
+
+def _run_monte_carlo():
+    try:
+        result = monte_carlo(state['model'], state['df_teams'], state['df_elo'], n=100)
+        state['monte_carlo'] = result
+        print(f"Monte Carlo done! {len(result)} teams", flush=True)
+    except Exception as e:
+        print(f"Monte Carlo ERROR: {e}", flush=True)
 
 app = FastAPI(lifespan=lifespan)
 
