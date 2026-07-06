@@ -49494,10 +49494,11 @@ date,home_team,away_team,home_score,away_score,tournament,neutral
 2026-07-03,Colombia,Ghana,1.0,0.0,FIFA World Cup,True
 2026-07-04,Canada,Morocco,0.0,3.0,FIFA World Cup,True
 2026-07-04,Paraguay,France,0.0,1.0,FIFA World Cup,True
-2026-07-05,Brazil,Norway,,,FIFA World Cup,True
-2026-07-05,Mexico,England,,,FIFA World Cup,False
+2026-07-05,Brazil,Norway,0.0,2.0,FIFA World Cup,True
+2026-07-05,Mexico,England,2.0,3.0,FIFA World Cup,False
 2026-07-06,Portugal,Spain,,,FIFA World Cup,True
 2026-07-06,United States,Belgium,,,FIFA World Cup,False
 2026-07-06,Argentina,Egypt,,,FIFA World Cup,True
 2026-07-06,Switzerland,Colombia,,,FIFA World Cup,True
 2026-07-09,France,Morocco,,,FIFA World Cup,True
+2026-07-11,Norway,England,,,FIFA World Cup,True
