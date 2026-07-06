@@ -10,7 +10,7 @@ import json
 from data import load_results, load_elo, process_elo
 from train import prepare_data, train_model
 from simulate import simulate_group_stage, build_predictions_df, simulate_group_stage, simulate_knockout_match
-from simulate import resolve_bracket, ROUND_OF_32, simulate_tournament, monte_carlo, predict_match, evaluate_predictions
+from simulate import resolve_bracket, ROUND_OF_32, simulate_tournament, monte_carlo, predict_match, evaluate_predictions, simulate_from_state
 
 state = {}
 
@@ -106,3 +106,10 @@ def get_history():
         'accuracy': float(accuracy),
         'matches': json.loads(played.to_json(orient='records'))
     }
+
+@app.get("/simulate-from-now")
+def simulate_from_now():
+    state_path = Path(__file__).parent.parent / 'data' / 'tournament_state.json'
+    history, winner = simulate_from_state(
+        state['model'], state['df_teams'], state['df_elo'], state_path)
+    return {'history': history, 'winner': winner}

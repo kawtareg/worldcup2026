@@ -1,0 +1,13 @@
+{
+    "stage": "round_of_16",
+    "matches": [
+      {"home": "Paraguay", "away": "France", "played": true, "winner": "France"},
+      {"home": "Canada", "away": "Morocco", "played": true, "winner": "Morocco"},
+      {"home": "Portugal", "away": "Spain", "played": true, "winner": "Spain"},
+      {"home": "Norway", "away": "Brazil", "played": true, "winner": "Norway"},
+      {"home": "Mexico", "away": "England", "played": true, "winner": "England"},
+      {"home": "United States", "away": "Belgium", "played": false, "winner": null},
+      {"home": "Argentina", "away": "Egypt", "played": false, "winner": null},
+      {"home": "Switzerland", "away": "Colombia", "played": false, "winner": null}
+    ]
+  }

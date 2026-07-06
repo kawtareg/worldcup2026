@@ -367,3 +367,54 @@ def monte_carlo(model, df_teams, df_elo, n=1000):
         _, winner = simulate_tournament(model, df_teams, df_elo, matches, date, team_features)
         wins_count[winner] += 1
     return sorted(wins_count.items(), key=lambda x: x[1], reverse=True)
+
+def simulate_from_state(model, df_teams, df_elo, state_path):
+    """Simulate tournament from current state.
+
+    Args:
+        model (XGBClassifier): Trained XGBoost model.
+        df_teams (pd.DataFrame): Team-level match dataframe.
+        df_elo (pd.DataFrame): Processed ELO ratings dataframe.
+        state_path (str): Path to tournament_state.json.
+
+    Returns:
+        tuple: (history, winner)
+    """
+    import json
+    with open(state_path) as f:
+        state = json.load(f)
+
+    date = pd.Timestamp('today')
+    r16_winners = []
+    r16_results = []
+
+    for match in state['matches']:
+        if match['played']:
+            winner = match['winner']
+        else:
+            winner = simulate_knockout_match(
+                model, df_teams, df_elo,
+                match['home'], match['away'], date
+            )
+        r16_winners.append(winner)
+        r16_results.append({
+            'home': match['home'],
+            'away': match['away'],
+            'winner': winner
+        })
+
+    history = {'R16': r16_results}
+    matches = [(r16_winners[i], r16_winners[i+1]) 
+               for i in range(0, len(r16_winners), 2)]
+
+    rounds = ['QF', 'SF', 'F']
+    for round_name in rounds:
+        winners, results = simulate_knockout_stage(
+            model, df_teams, df_elo, matches, date)
+        history[round_name] = results
+        if round_name == 'F':
+            break
+        matches = [(winners[i], winners[i+1]) 
+                   for i in range(0, len(winners), 2)]
+
+    return history, winners[0]
