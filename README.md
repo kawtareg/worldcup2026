@@ -45,15 +45,17 @@ A machine learning system predicting match outcomes and simulating the 2026 Worl
 
 ## Architecture
 
-Data pipeline:
+**Data pipeline:**
 
 martj42/international_results → precompute.py → features.csv
 
 eloratings.net (Kaggle)       → df_teams.csv
-Prediction pipeline:
+
+**Prediction pipeline:**
 
 features.csv + xgboost.pkl → FastAPI → GitHub Pages frontend
-Simulation:
+
+**Simulation:**
 
 Monte Carlo (1000 tournaments) → win probabilities per team
 
@@ -104,6 +106,7 @@ uv run uvicorn api:app --reload
 
 ## Project Structure
 
+```
 worldcup2026/
 ├── data/
 │   ├── raw/              # results.csv, elo_ratings_wc2026.csv
@@ -121,6 +124,7 @@ worldcup2026/
 │   └── main.py           # training pipeline
 ├── index.html            # frontend dashboard
 └── .github/workflows/    # nightly data refresh
+```
 
 ---
 
