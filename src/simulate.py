@@ -335,37 +335,48 @@ def simulate_tournament(model, df_teams, df_elo, matches, date, team_features=No
         matches = [(winners[i], winners[i+1]) for i in range(0, len(winners), 2)]
     return history, winners[0]
 
-def monte_carlo(model, df_teams, df_elo, n=1000):
-    """Run Monte Carlo simulations to estimate each team's probability of winning the World Cup.
+def monte_carlo(model, df_teams, df_elo, state_path, n=100):
+    """Run Monte Carlo simulations from current tournament state.
 
     Args:
         model (XGBClassifier): Trained XGBoost model.
         df_teams (pd.DataFrame): Team-level match dataframe.
         df_elo (pd.DataFrame): Processed ELO ratings dataframe.
-        n (int): Number of simulations to run. Defaults to 1000.
+        state_path (Path): Path to tournament_state.json.
+        n (int): Number of simulations. Defaults to 100.
 
     Returns:
         list: List of (team, wins) tuples sorted by wins descending.
     """
-    date = pd.Timestamp('2026-06-11')
-    all_teams = [t for teams in GROUPS.values() for t in teams]
+    import json
+    with open(state_path) as f:
+        tournament = json.load(f)
+
+    alive = set()
+    for match in tournament['matches']:
+        if match['played']:
+            alive.add(match['winner'])
+        else:
+            alive.add(match['home'])
+            alive.add(match['away'])
+
+    date = pd.Timestamp('today')
     team_features = {}
-    for team in all_teams:
-        elo = get_elo(df_elo, team, date)
+    for team in alive:
         form, avg_scored, avg_conceded = get_team_form(df_teams, team, date, df_elo=df_elo)
+        elo = get_elo(df_elo, team, date)
         team_features[team] = {
-            'form': float(form) if form != '' and form is not None else 0.0,
+            'form': float(form) if form != '' else 0.0,
             'elo': float(elo),
-            'avg_scored': float(avg_scored) if avg_scored != '' and avg_scored is not None else 0.0,
-            'avg_conceded': float(avg_conceded) if avg_conceded != '' and avg_conceded is not None else 0.0
+            'avg_scored': float(avg_scored) if avg_scored != '' else 0.0,
+            'avg_conceded': float(avg_conceded) if avg_conceded != '' else 0.0
         }
 
-    wins_count = {team: 0 for team in all_teams}
+    wins_count = {team: 0 for team in alive}
     for _ in range(n):
-        results, best_thirds = simulate_group_stage(model, df_teams, df_elo, team_features)
-        matches = resolve_bracket(ROUND_OF_32, results, best_thirds)
-        _, winner = simulate_tournament(model, df_teams, df_elo, matches, date, team_features)
+        _, winner = simulate_from_state(model, df_teams, df_elo, state_path, team_features)
         wins_count[winner] += 1
+
     return sorted(wins_count.items(), key=lambda x: x[1], reverse=True)
 
 def simulate_from_state(model, df_teams, df_elo, state_path):
